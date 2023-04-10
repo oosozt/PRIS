@@ -1,5 +1,5 @@
 import time
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import pygame
 import cv2
 from queue import PriorityQueue
@@ -7,12 +7,13 @@ import serial.tools.list_ports
 import requests
 import numpy as np
 import imutils
-import waiting
+#import waiting
 from sklearn.metrics import r2_score
 import os
 
 
-load_dotenv()
+
+#load_dotenv()
 
 WIDTH = 800
 WIN = pygame.display.set_mode((WIDTH, WIDTH))
@@ -202,7 +203,7 @@ def camera():
 	# ************************************************************************************************
 	classNames = []
 	classFile = "coco.names"
-	url = os.dotenv.get("USER_CAMERA")
+	#url = os.dotenv.get("USER_CAMERA")
 
 	ports = serial.tools.list_ports.comports()
 	serialInst = serial.Serial()

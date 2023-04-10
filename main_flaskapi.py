@@ -48,6 +48,27 @@ def response_tfmini():
     print(response_distance)
     return jsonify(response_distance)
 
+@app.route('/tflite',methods=['POST'])
+def tensorflow_recognizer():
+    data = request.json
+    xmin = data.get('xmin')
+    y_min = data.get('ymin')
+    label=data.get('label')
+
+    # Process the data as needed
+    # You can perform computations, store the data in a database, etc.
+
+    # Return a response in JSON format
+    response_tensorflow = {
+        'status': 'success',
+        'message': 'Data received and processed successfully',
+        'xmin': xmin,
+        'label':label,
+        'y_min':y_min
+
+    }
+    print(response_tensorflow)
+    return jsonify(response_tensorflow)
 
 if __name__ == '__main__':
     app.run(host=os.getenv("URL"), port=8080)
