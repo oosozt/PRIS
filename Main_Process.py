@@ -10,6 +10,7 @@ import imutils
 #import waiting
 from sklearn.metrics import r2_score
 import os
+import json
 
 
 
@@ -170,7 +171,30 @@ def make_grid(rows, width):
 			grid[i].append(spot)
 
 	return grid
+def init_json():
+	json_file_path = "object.json"
+	# read the contents of the file
+	with open(json_file_path, "r") as f:
+		json_data = json.load(f)
+	# update the values in the JSON data
+	json_data["status"] = "empty"
+	json_data["xmin"] = 0
+	json_data["message"] = "No message"
+	json_data["label"] = "No label"
+	json_data["xmax"] = 0
+	json_data["count"] = 0
+	# write the updated JSON data back to the file
+	with open(json_file_path, "w") as f:
+		json.dump(json_data, f)
 
+def json_data():
+	json_file_path = "object.json"
+
+	# read the contents of the file
+	with open(json_file_path, "r") as f:
+		json_data = json.load(f)
+	print(json_data)
+	return json_data
 
 def draw_grid(win, rows, width):
 	gap = width // rows
@@ -199,109 +223,11 @@ def get_clicked_pos(pos, rows, width):
 	return row, col
 
 
-def camera():
-	# ************************************************************************************************
-	classNames = []
-	classFile = "coco.names"
-	#url = os.dotenv.get("USER_CAMERA")
-
-	ports = serial.tools.list_ports.comports()
-	serialInst = serial.Serial()
-	portlist = []
-	for onePort in ports:
-		portlist.append(str(onePort))
-		print(str(onePort))
-
-	portVar = "COM" + str(7)
-	serialInst.baudrate = 9600
-	serialInst.port = portVar
-	serialInst.open()
-	list_val = []
-	distances = []
-	angles = []
-	x = 1
-	y = 1
-	with open(classFile, "rt") as f:
-		classNames = f.read().rstrip("\n").split("\n")
-
-	configPath = os.dotenv.get("CONFIG_PATH")
-	weightsPath = os.dotenv.get("GRAPH_INFERENCE")
-
-	net = cv2.dnn_DetectionModel(weightsPath, configPath)
-	net.setInputSize(320, 320)
-	net.setInputScale(1.0 / 127.5)
-	net.setInputMean((127.5, 127.5, 127.5))
-	net.setInputSwapRB(True)
-
-	def getObjects(img, thres, nms, draw=True, objects=[]):
-		classIds, confs, bbox = net.detect(img, confThreshold=thres, nmsThreshold=nms)
-		if len(objects) == 0: objects = classNames
-		detected = 0
-		objectInfo = []
-		if len(classIds) != 0:
-			detected = 1
-			for classId, confidence, box in zip(classIds.flatten(), confs.flatten(), bbox):
-				className = classNames[classId - 1]
-				if className in objects:
-					objectInfo.append([box, className])
-					if (draw):
-						cv2.rectangle(img, box, color=(0, 255, 0), thickness=2)
-						cv2.putText(img, classNames[classId - 1].upper(), (box[0] + 10, box[1] + 30),
-									cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-						cv2.putText(img, str(round(confidence * 100, 2)), (box[0] + 200, box[1] + 30),
-									cv2.FONT_HERSHEY_COMPLEX, 1, (0, 255, 0), 2)
-						print(classNames[classId - 1].upper(),)
-		return img, objectInfo, bbox, detected
-
-	##kamera mesafe yukseklik ##sunum icin detaylandırt
-	if __name__ == "__main__":
-		cap = cv2.VideoCapture(1)
-		while True:
-			# img_resp = requests.get(url)
-			# img_arr = np.array(bytearray(img_resp.content), dtype=np.uint8)
-			# img = cv2.imdecode(img_arr, -1)
-			success, img = cap.read()
-			img = imutils.resize(img, width=800, height=800)
-			# cv2.imshow("Android_cam", img)
-			result, objectInfo, bbox, detected = getObjects(img, 0.75, 0.2, objects=["ship"])
-			cv2.imshow("Output", img)
-			cv2.waitKey(1)
-			if detected == 0:
-				gen = 0
-			if detected == 1:
-				cv2.destroyAllWindows()
-				while (x == 1):
-					if (y == 1):
-						num = "1"
-						time.sleep(1.6)
-						serialInst.write(num.encode())
-						y = 0
-					packet = serialInst.readline()
-					list_val.append(packet.decode('utf'))
-					distances.append(int(list_val[-1].split(',')[0]))
-					angles.append(int(list_val[-1].split(',')[1]))
-
-					if (len(list_val) == 9):
-						x = 0
-						min_pos = distances.index(min(distances))
-						uzun = min(distances)
-						print(angles[min_pos])
-
-				# if serialInst.in_waiting:
-				print(f'detected:{detected},bbox: {bbox[0][2]},distance: {uzun}')
-				x = [20, 25, 30, 35, 40, 45, 50]
-				y = [0.0404, 0.0487, 0.0576, 0.0605, 0.0661, 0.0782, 0.0871]
-				mymodel = np.poly1d(np.polyfit(x, y, 3))
-				gen = bbox[0][2]*mymodel(uzun)
-				# if bbox[0][2] < 750:
-				return detected, int(uzun), int(gen), bbox[0][0], bbox[0][2]
-
-
-
-# ****************************************************************************************************
-
-
 def main(win, width):
+	init_json()
+	data = json_data()
+	tarik = data["count"]
+	print(tarik)
 	ROWS = 50
 	grid = make_grid(ROWS, width)
 	start = None
@@ -329,17 +255,21 @@ def main(win, width):
 					end.make_end()
 
 				elif spot != end and spot != start:
-					detected, uzunl, geni, basl, bbox_w = camera()
-					cv2.destroyAllWindows()
-					print("genislik,uzaklik,baslangic,bbox_w",geni,uzunl,basl, bbox_w)
-					if detected == 1:
-						if uzunl < 500:
-							if bbox_w < 700:
-								for p in range(geni):
-									pos = (int(basl + 9.3*p),int(800 - 10.3*uzunl))
-									row, col = get_clicked_pos(pos, ROWS, width)
-									spot = grid[row][col]
-									spot.make_barrier()
+					#detected, uzunl, geni, basl, bbox_w = camera()
+					#cv2.destroyAllWindows()
+					print("wassup")
+					data2 = json_data()
+					oguz = data2["count"]
+					print(oguz,tarik)
+					if tarik != oguz:
+						gen = data2["xmin"]
+						data = data2
+						for p in range(gen):
+							pos = (int(gen + 9.3*p),int(800 - 10.3*gen))
+							print(gen,"oi cunt")
+							row, col = get_clicked_pos(pos, ROWS, width)
+							spot = grid[row][col]
+							spot.make_barrier()
 
 
 			elif pygame.mouse.get_pressed()[2]: # RIGHT
