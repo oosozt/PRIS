@@ -14,4 +14,6 @@ def predicted_distance(calculated_irl_distance):
     except:
         print("Error: Predicted Value Error")
 
+predicted_distance(45)
+
 

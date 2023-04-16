@@ -1,13 +1,15 @@
 import requests
 from dotenv import load_dotenv
 import os
+
 load_dotenv()
 url = 'http://{}:8080/tflite'.format(os.getenv('URL'))
 # Define the data to be sent in the request body
 data = {
-    'xmin': 15,
-    'y_min':25-7,
-    'label': 'selam'
+    'xmin': 60,
+    'xmax':2000,
+    'label': 'hallo',
+    'count': 1
 }
 
 # Send a POST request to the Flask API

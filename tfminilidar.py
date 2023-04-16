@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv(".env")
 ser = serial.Serial("/dev/ttyAMA0", 115200)
-
+#todo: get distance value every 0.5 seconds in the process of servo motor
 def getTFminiData():
     while True:
         count = ser.in_waiting
